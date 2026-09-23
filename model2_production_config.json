@@ -1,0 +1,24 @@
+{
+  "model_name": "Smart Herd Model 2 - Personalized Estrus Detector",
+  "deployment": "cloud",
+  "selected_model": "XGBoost",
+  "probability_threshold": 0.6,
+  "public_required_high_of_3": 1,
+  "production_recommended_smoothing_intervals": 3,
+  "production_recommended_required_high_intervals": 2,
+  "cooldown_hours": 24,
+  "update_interval_minutes": 15,
+  "recent_history_hours": [
+    6,
+    12,
+    24,
+    48
+  ],
+  "personal_baseline_days": 14,
+  "exclude_recent_hours_from_baseline": 48,
+  "cold_start_minimum_days": 7,
+  "project_target_event_sensitivity": 0.85,
+  "project_target_false_positive_rate": 0.1,
+  "project_target_detection_latency_hours": 4.0,
+  "latency_validation_note": "Exact onset latency requires Smart Herd field ground truth."
+}

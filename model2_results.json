@@ -1,0 +1,37 @@
+{
+  "public_dataset": {
+    "doi": "10.15454/52J8YS",
+    "file": "dataset4.tab",
+    "rows_raw": 2177208,
+    "cows_raw": 300,
+    "usable_rows": 2104751,
+    "labeled_event_blocks": 208
+  },
+  "selected_model": "XGBoost",
+  "test_probability_metrics": {
+    "roc_auc": 0.9177506790682599,
+    "pr_auc": 0.0710621670524622
+  },
+  "test_interval_metrics": {
+    "precision": 0.04200772200772201,
+    "recall": 0.7028423772609819,
+    "f1": 0.07927717866511222,
+    "balanced_accuracy": 0.8320896129964415
+  },
+  "test_alert_metrics": {
+    "event_sensitivity": 0.9090909090909091,
+    "false_positive_rate": 0.03866315126809901,
+    "false_alerts_per_cow_day": 0.0790273556231003,
+    "events": 33,
+    "events_detected": 30,
+    "label_block_latency_proxy_mean_h": 6.733333333333333,
+    "label_block_latency_proxy_median_h": 5.5,
+    "normal_negative_fpr": 0.04002343934880681,
+    "other_event_negative_fpr": 0.03203732503888025
+  },
+  "project_gates": {
+    "event_sensitivity_ge_85pct": true,
+    "false_positive_rate_lt_10pct": true
+  },
+  "public_benchmark_ready": true
+}

@@ -1,0 +1,6 @@
+{
+  "description": "Portable XGBoost deployment self-test using an all-zero 85-feature vector.",
+  "feature_count": 85,
+  "expected_probability": 0.00014840059156995267,
+  "absolute_tolerance": 1e-07
+}
