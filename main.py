@@ -98,21 +98,49 @@ def fetch_recent_behavior(cow_id: str):
         - timedelta(days=MODEL2_HISTORY_DAYS)
     ).isoformat()
 
-    response = (
-        get_supabase()
-        .table("behavior_15min")
-        .select(
-            "farm_id,cow_id,ts,walking_prop,grazing_prop,"
-            "resting_prop,other_prop,activity_intensity,"
-            "behavior_transition_rate,mean_model1_confidence,"
-            "collar_temperature,data_quality"
-        )
-        .eq("cow_id", cow_id)
-        .gte("ts", start)
-        .order("ts")
-        .execute()
+    columns = (
+        "farm_id,cow_id,ts,"
+        "walking_prop,grazing_prop,"
+        "resting_prop,other_prop,"
+        "activity_intensity,"
+        "behavior_transition_rate,"
+        "mean_model1_confidence,"
+        "collar_temperature,"
+        "data_quality"
     )
-    return response.data or []
+
+    all_rows = []
+
+    page_size = 1000
+    offset = 0
+
+    while True:
+
+        response = (
+            get_supabase()
+            .table("behavior_15min")
+            .select(columns)
+            .eq("cow_id", cow_id)
+            .gte("ts", start)
+            .order("ts")
+            .range(
+                offset,
+                offset + page_size - 1
+            )
+            .execute()
+        )
+
+        batch = response.data or []
+
+        all_rows.extend(batch)
+
+        # Last page
+        if len(batch) < page_size:
+            break
+
+        offset += page_size
+
+    return all_rows
 
 def prepare_hourly(rows):
     if not rows:
