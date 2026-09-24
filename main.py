@@ -10,6 +10,8 @@ import pandas as pd
 import xgboost as xgb
 from fastapi import FastAPI, HTTPException, Query, Header
 from supabase import create_client
+from fastapi.middleware.cors import CORSMiddleware
+
 
 ROOT = Path(__file__).resolve().parent
 
@@ -443,13 +445,20 @@ ADAPTER_WARNING = (
     "Do not use this shadow probability as a production farmer alert."
 )
 
+
 app = FastAPI(
-    title="Smart Herd AI Service",
-    version="0.3.0",
-    description=(
-        "Flat Render deployment of Smart Herd Model 2 "
-        "in public-benchmark shadow mode."
-    ),
+    title="Smart Herd Model 2"
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+    allow_credentials=True,
+    allow_methods=["GET", "POST"],
+    allow_headers=["*"],
 )
 
 @app.get("/")
