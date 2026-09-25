@@ -452,15 +452,26 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
+
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "https://smart-herd-dashboard-eight.vercel.app",
     ],
+
+    # Also permit this project's Vercel preview deployments.
+    allow_origin_regex=r"https://smart-herd-dashboard(?:-[a-z0-9-]+)?\.vercel\.app",
+
     allow_credentials=True,
-    allow_methods=["GET", "POST"],
+
+    allow_methods=[
+        "GET",
+        "POST",
+        "OPTIONS",
+    ],
+
     allow_headers=["*"],
 )
-
 @app.get("/")
 def root():
     return {
