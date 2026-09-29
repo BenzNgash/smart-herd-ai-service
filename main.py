@@ -11,6 +11,7 @@ import xgboost as xgb
 from fastapi import FastAPI, HTTPException, Query, Header
 from supabase import create_client
 from fastapi.middleware.cors import CORSMiddleware
+import model3_runtime as model3
 
 
 ROOT = Path(__file__).resolve().parent
@@ -447,7 +448,7 @@ ADAPTER_WARNING = (
 
 
 app = FastAPI(
-    title="Smart Herd Model 2"
+    title="Smart Herd AI Service"
 )
 
 app.add_middleware(
@@ -477,26 +478,49 @@ def root():
     return {
         "service": "smart-herd-ai",
         "status": "ok",
-        "mode": "model2-public-shadow",
+        "mode": "model2+model3-shadow-research",
         "platform": "render",
     }
 
 @app.get("/health")
 def health():
-    test = model_self_test_result()
+    m2_test = model_self_test_result()
+    try:
+        m3_test = model3.self_test_result()
+    except Exception as exc:
+        m3_test = {"passed": False, "error": str(exc)}
+
+    all_ok = bool(m2_test.get("passed")) and bool(m3_test.get("passed"))
+
     return {
-        "status": "healthy" if test["passed"] else "model_self_test_failed",
-        "model": "Smart Herd Model 2",
-        "algorithm": PRODUCTION_CONFIG["selected_model"],
-        "feature_count": len(FEATURE_COLUMNS),
+        "status": "healthy" if all_ok else "model_self_test_failed",
+        # Backward-compatible alias used by the existing dashboard.
+        "self_test": m2_test,
         "supabase_configured": bool(
             SUPABASE_URL and SUPABASE_SECRET_KEY
         ),
         "internal_api_key_configured": bool(INTERNAL_API_KEY),
         "farm_timezone": FARM_TIMEZONE,
-        "model_version": MODEL2_VERSION,
-        "self_test": test,
+        "models": {
+            "model2": {
+                "name": "Smart Herd Model 2",
+                "algorithm": PRODUCTION_CONFIG["selected_model"],
+                "feature_count": len(FEATURE_COLUMNS),
+                "model_version": MODEL2_VERSION,
+                "self_test": m2_test,
+            },
+            "model3": {
+                "name": "Smart Herd Model 3 v3",
+                "algorithm": "XGBoost_RowBalanced",
+                "architecture": "decision_level_hybrid",
+                "novelty_mode": model3.NOVELTY_MODE,
+                "feature_count": len(model3.FEATURES),
+                "model_version": model3.MODEL_VERSION,
+                "self_test": m3_test,
+            },
+        },
     }
+
 
 @app.post("/model2/self-test")
 def model2_self_test(
@@ -553,6 +577,48 @@ def model2_shadow(
                 "cow_id": cow_id,
                 "message": str(exc),
                 "required_history_days": MODEL2_HISTORY_DAYS,
+            },
+        )
+    except Exception as exc:
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "status": "error",
+                "cow_id": cow_id,
+                "message": str(exc),
+            },
+        )
+
+
+@app.post("/model3/self-test")
+def model3_self_test(
+    x_smart_herd_key: str | None = Header(default=None),
+):
+    require_internal_key(x_smart_herd_key)
+    result = model3.self_test_result()
+    if not result["passed"]:
+        raise HTTPException(status_code=500, detail=result)
+    return result
+
+
+@app.post("/model3/shadow/{cow_id}")
+def model3_shadow(
+    cow_id: str,
+    persist: bool = Query(default=False),
+    x_smart_herd_key: str | None = Header(default=None),
+):
+    require_internal_key(x_smart_herd_key)
+
+    try:
+        return model3.shadow(cow_id, persist_result=persist)
+    except model3.InsufficientHistoryError as exc:
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "status": "insufficient_history",
+                "cow_id": cow_id,
+                "message": str(exc),
+                "required_history_days": model3.HISTORY_DAYS,
             },
         )
     except Exception as exc:
