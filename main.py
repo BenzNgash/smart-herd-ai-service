@@ -425,6 +425,9 @@ def persist_shadow_prediction(
         "resting_z": diagnostics["resting_z"],
         "activity_z": diagnostics["activity_z"],
         "model_version": MODEL2_VERSION,
+        # This is the actual inference-run time. It must be refreshed
+        # on every upsert even when the evaluated hourly ts is unchanged.
+        "created_at": datetime.now(timezone.utc).isoformat(),
     }
 
     return (
